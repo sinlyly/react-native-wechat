@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import com.facebook.common.executors.UiThreadImmediateExecutorService;
 import com.facebook.common.references.CloseableReference;
@@ -32,6 +33,7 @@ import com.tencent.mm.opensdk.modelbase.BaseResp;
 import com.tencent.mm.opensdk.modelbiz.WXLaunchMiniProgram;
 import com.tencent.mm.opensdk.modelmsg.SendAuth;
 import com.tencent.mm.opensdk.modelmsg.SendMessageToWX;
+import com.tencent.mm.opensdk.modelmsg.ShowMessageFromWX;
 import com.tencent.mm.opensdk.modelmsg.WXFileObject;
 import com.tencent.mm.opensdk.modelmsg.WXImageObject;
 import com.tencent.mm.opensdk.modelmsg.WXMediaMessage;
@@ -68,7 +70,8 @@ public class WeChatModule extends ReactContextBaseJavaModule implements IWXAPIEv
         return "RCTWeChat";
     }
 
-    /**
+    /**console
+     *
      * fix Native module WeChatModule tried to override WeChatModule for module name RCTWeChat.
      * If this was your intention, return true from WeChatModule#canOverrideExistingModule() bug
      *
@@ -96,6 +99,25 @@ public class WeChatModule extends ReactContextBaseJavaModule implements IWXAPIEv
     }
 
     public static void handleIntent(Intent intent) {
+        if( intent != null ){
+            Log.i("mll:intent:","is not null");
+            if (intent.getAction()!= null){
+                Log.i("mll:wechate action:",intent.getAction().toString());
+            }
+            if(intent.getData()!=null){
+                if(intent.getData().getPath()!=null){
+                    Log.i("mll:wechate Path:",intent.getData().getPath());
+                }
+                if(intent.getData().getScheme()!=null){
+                    Log.i("mll:wechate Path:",intent.getData().getScheme());
+                }
+                if(intent.getData().getAuthority()!=null){
+                    Log.i("mll:wechate Path:",intent.getData().getAuthority());
+                }
+            }
+        }else{
+            Log.i("mll:wechate intent:","is null");
+        }
         for (WeChatModule mod : modules) {
             mod.api.handleIntent(intent, mod);
         }
@@ -562,7 +584,40 @@ public class WeChatModule extends ReactContextBaseJavaModule implements IWXAPIEv
 
     @Override
     public void onReq(BaseReq baseReq) {
+        ShowMessageFromWX.Req req = (ShowMessageFromWX.Req)baseReq;
+        WXMediaMessage message = req.message;
+        switch (baseReq.getType()) {
+            case ConstantsAPI.COMMAND_GETMESSAGE_FROM_WX:
+                changeIntent(message.messageExt.toString());
+                Log.i("onReq:GETMESSAGE:",message.messageExt.toString());
+                break;
+            case ConstantsAPI.COMMAND_SHOWMESSAGE_FROM_WX:
+                changeIntent(message.messageExt.toString());
+                Log.i("onReq:SHOWMESSAGE:",message.messageExt.toString());
+                break;
+            default:
+                break;
+        }
 
+    }
+
+    private void goToGetMsg() {
+        Intent intent = new Intent(this.getCurrentActivity().getIntent());
+        this.getCurrentActivity().startActivity(intent);
+    }
+
+    public void changeIntent(String strUri){
+        if(strUri!=null && !"".equals(strUri)){
+            String [] urlPart = strUri.split("://");
+            String scheme = urlPart[0];
+            String [] u = urlPart[1].split("/",2);
+            try {
+                Intent intent = new Intent(Intent.ACTION_VIEW,new Uri.Builder().scheme(scheme).authority(u[0]).path(u[1]).build());
+                this.getCurrentActivity().startActivity(intent);
+            } catch (Exception e) {
+                Log.d("Exception:",e.toString());
+            }
+        }
     }
 
     @Override
