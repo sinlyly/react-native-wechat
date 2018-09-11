@@ -99,25 +99,6 @@ public class WeChatModule extends ReactContextBaseJavaModule implements IWXAPIEv
     }
 
     public static void handleIntent(Intent intent) {
-        if( intent != null ){
-            Log.i("mll:intent:","is not null");
-            if (intent.getAction()!= null){
-                Log.i("mll:wechate action:",intent.getAction().toString());
-            }
-            if(intent.getData()!=null){
-                if(intent.getData().getPath()!=null){
-                    Log.i("mll:wechate Path:",intent.getData().getPath());
-                }
-                if(intent.getData().getScheme()!=null){
-                    Log.i("mll:wechate Path:",intent.getData().getScheme());
-                }
-                if(intent.getData().getAuthority()!=null){
-                    Log.i("mll:wechate Path:",intent.getData().getAuthority());
-                }
-            }
-        }else{
-            Log.i("mll:wechate intent:","is null");
-        }
         for (WeChatModule mod : modules) {
             mod.api.handleIntent(intent, mod);
         }
